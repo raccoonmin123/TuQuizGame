@@ -5,10 +5,11 @@ import pymysql
 # root.geometry("800x600")
 # label = tk.Label(root, text="Hello World!")
 
-conn = pymysql.connect(host='127.0.0.1', port = 3306 , user='root', password='root', db='quiz', charset='utf8')
+
+conn = pymysql.connect(host='127.0.0.1', port = 3306 , user='root', password='root', db='Quiz', charset='utf8')
 
 cursor = conn.cursor()
-sql = "SELECT * FROM users"
+sql = "SELECT * FROM user"
 cursor.execute(sql)
 
 result = cursor.fetchall()
