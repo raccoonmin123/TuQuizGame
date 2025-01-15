@@ -6,7 +6,7 @@ import pymysql
 # label = tk.Label(root, text="Hello World!")
 
 
-conn = pymysql.connect(host='127.0.0.1', port = 3306 , user='root', password='root', db='tuQuizGame', charset='utf8')
+conn = pymysql.connect(host='127.0.0.1', port = 3306 , user='root', password='sk0716kyh!', db='tuQuizGame', charset='utf8')
 
 cursor = conn.cursor()
 sql = "SELECT * FROM user"
