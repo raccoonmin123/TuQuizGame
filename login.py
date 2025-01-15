@@ -26,7 +26,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(600, 500)
-        self.label = QtWidgets.QLabel(Dialog)
+        self.label = QtWidgets.QLabel(Dialog)   #사진
         self.label.setGeometry(QtCore.QRect(130, 250, 54, 12))
         self.label.setObjectName("label")
         self.label_2 = QtWidgets.QLabel(Dialog)
