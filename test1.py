@@ -9,7 +9,7 @@ import pymysql
 conn = pymysql.connect(host='127.0.0.1', port = 3306 , user='root', password='root', db='tuQuizGame', charset='utf8')
 
 cursor = conn.cursor()
-sql = "SELECT * FROM user"
+sql = "SELECT * FROM questions"
 cursor.execute(sql)
 
 result = cursor.fetchall()
