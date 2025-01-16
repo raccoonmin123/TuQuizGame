@@ -155,6 +155,7 @@ def add_question_to_db(question, answer_a, answer_b, answer_c, answer_d, correct
         messagebox.showerror("Database Error", f"에러가 발생했습니다: {err}")
         print(f"Database Error: {err}")
 
+
 def quiz_game(category=None):
     print("데이터는 가져옴")
     questions = get_questions_from_db(category)
@@ -167,6 +168,9 @@ def quiz_game(category=None):
 
     def next_question():
         nonlocal question_index, score
+        connection = mysql.connector.connect(**DB_CONFIG)
+        cursor = connection.cursor()
+
         if question_index < len(questions):
             q = questions[question_index]
             question_label.config(text=f"문제 {question_index + 1}: {q['question']}")
@@ -177,12 +181,22 @@ def quiz_game(category=None):
             total_time = end_time - start_time  # 소요 시간 계산
             if score == len(questions):  # 모든 문제를 맞췄을 때만 시간 표시
                 messagebox.showinfo("퀴즈 종료", f"축하합니다! 모든 문제를 맞췄습니다!\n"
-                                               f"최종 점수: {score}/{len(questions)}\n"
-                                               f"소요 시간: {total_time:.2f}초")
+                                             f"최종 점수: {score}/{len(questions)}\n"
+                                             f"소요 시간: {total_time:.2f}초")
             else:
                 messagebox.showinfo("퀴즈 종료", f"퀴즈가 끝났습니다.\n"
-                                               f"최종 점수: {score}/{len(questions)}")
+                                             f"최종 점수: {score}/{len(questions)}")
 
+            # 게임 기록을 DB에 저장: 카테고리를 `name`에 삽입
+            try:
+                query = "INSERT INTO record (name, time, score) VALUES (%s, %s, %s)"
+                cursor.execute(query, (category, total_time, score))  # 카테고리 값을 `name`에 삽입
+                connection.commit()  # 기록 저장
+            except mysql.connector.Error as err:
+                messagebox.showerror("Database Error", f"Error: {err}")
+                print(f"Database Error: {err}")
+
+            connection.close()
             window.destroy()
 
     def check_answer(selected_option):
@@ -216,7 +230,10 @@ def quiz_game(category=None):
         option_buttons.append(btn)
 
     next_question()
+
     window.mainloop()
+
+
 
 
 # 로그인 화면
@@ -270,10 +287,42 @@ def create_game_or_add_question_screen():
               font=("Arial", 12), width=20).pack(pady=10)
     tk.Button(window, text="문제 추가", command=create_question_interface,
               font=("Arial", 12), width=20).pack(pady=10)
-    tk.Button(window, text="기록 보기", command=create_question_interface,
+    tk.Button(window, text="기록 보기", command=match_info,
               font=("Arial", 12), width=20).pack(pady=10)
 
     window.mainloop()
+
+
+def match_info():
+    try:
+        connection = mysql.connector.connect(**DB_CONFIG)
+        cursor = connection.cursor()
+
+        # record 테이블에서 모든 기록 조회
+        cursor.execute("SELECT name , time, score FROM record")
+        records = cursor.fetchall()
+
+        if records:
+            # 결과를 보기 좋은 형식으로 표시
+            record_text = "종류         소요 시간(초)        점수\n"
+            record_text += "-" * 50 + "\n"
+            for record in records:
+                # `time` 값이 문자열일 수 있으므로 float로 변환 후 소수점 2자리 포매팅
+                record_text += f"{record[0]}              {float(record[1]):.2f}               {record[2]}\n"
+
+            # 결과를 messagebox로 표시
+            messagebox.showinfo("기록 보기", record_text)
+        else:
+            messagebox.showinfo("기록 보기", "기록이 없습니다.")
+
+    except mysql.connector.Error as err:
+        messagebox.showerror("Database Error", f"Error: {err}")
+        print(f"Database Error: {err}")
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+
 
 # 문제 추가 인터페이스 함수 (카테고리 선택 추가)
 def create_question_interface():
