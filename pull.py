@@ -21,7 +21,7 @@ DB_CONFIG = {
     "host": "127.0.0.1",
     "port": 3306,
     "user": "root",
-    "password": "sk0716kyh!",
+    "password": "root",
     "database": "tuQuizGame",
 }
 
@@ -108,7 +108,6 @@ def get_questions_from_db(category=None):
                 "answer": row[5]
             }
             questions.append(question)
-            print("씨발")
 
         return questions
     except mysql.connector.Error as err:
@@ -122,11 +121,18 @@ def get_questions_from_db(category=None):
 # MySQL 데이터베이스 연결 및 문제 추가 함수
 def add_question_to_db(question, answer_a, answer_b, answer_c, answer_d, correct, name, user_id):
     try:
+        # # MySQL 데이터베이스 연결
+        # conn = mysql.connector.connect(
+        #     host="127.0.0.1",  # 데이터베이스 호스트
+        #     user="root",       # 사용자명
+        #     password="sk0716kyh!",  # 비밀번호
+        #     database="tuQuizGame"    # 데이터베이스 이름
+        # )
         # MySQL 데이터베이스 연결
         conn = mysql.connector.connect(
             host="127.0.0.1",  # 데이터베이스 호스트
             user="root",       # 사용자명
-            password="sk0716kyh!",  # 비밀번호
+            password="root",  # 비밀번호
             database="tuQuizGame"    # 데이터베이스 이름
         )
         cursor = conn.cursor()
@@ -148,92 +154,6 @@ def add_question_to_db(question, answer_a, answer_b, answer_c, answer_d, correct
     except mysql.connector.Error as err:
         messagebox.showerror("Database Error", f"에러가 발생했습니다: {err}")
         print(f"Database Error: {err}")
-
-
-# def save_quiz_result_to_db(username, score, total_time):
-#     try:
-#         connection = mysql.connector.connect(**DB_CONFIG)
-#         cursor = connection.cursor()
-#
-#         # 사용자 ID 찾기
-#         cursor.execute("SELECT user_id FROM users WHERE email = %s", (username,))
-#         user_id = cursor.fetchone()
-#
-#         if not user_id:
-#             messagebox.showerror("Error", "사용자를 찾을 수 없습니다.")
-#             return
-#
-#         user_id = user_id[0]  # 첫 번째 값이 user_id입니다.
-#         current_time = time.strftime('%Y-%m-%d %H:%M:%S')  # 현재 날짜 및 시간
-#
-#         query = """
-#         INSERT INTO quiz_history (user_id, score, total_time, quiz_date)
-#         VALUES (%s, %s, %s, %s)
-#         """
-#         cursor.execute(query, (user_id, score, total_time, current_time))
-#         connection.commit()
-#         messagebox.showinfo("성공", "퀴즈 기록이 저장되었습니다.")
-#
-#     except mysql.connector.Error as err:
-#         messagebox.showerror("Database Error", f"Error: {err}")
-#     finally:
-#         if 'connection' in locals():
-#             connection.close()
-
-# 퀴즈 기록을 조회하는 함수
-# def view_quiz_history(username):
-#     try:
-#         connection = mysql.connector.connect(**DB_CONFIG)
-#         cursor = connection.cursor()
-#
-#         # 사용자 ID 찾기
-#         cursor.execute("SELECT user_id FROM users WHERE email = %s", (username,))
-#         user_id = cursor.fetchone()
-#
-#         if not user_id:
-#             messagebox.showerror("Error", "사용자를 찾을 수 없습니다.")
-#             return
-#
-#         user_id = user_id[0]
-#
-#         query = """
-#         SELECT score, total_time, quiz_date FROM quiz_history
-#         WHERE user_id = %s
-#         ORDER BY quiz_date DESC
-#         """
-#         cursor.execute(query, (user_id,))
-#         rows = cursor.fetchall()
-#
-#         if rows:
-#             # 기록을 보여주는 창
-#             history_window = tk.Tk()
-#             history_window.title(f"{username}님의 퀴즈 기록")
-#             history_window.geometry("600x400")
-#
-#             history_label = tk.Label(history_window, text=f"{username}님의 퀴즈 기록", font=("Arial", 14))
-#             history_label.pack(pady=20)
-#
-#             history_text = tk.Text(history_window, width=70, height=15)
-#             history_text.pack(pady=10)
-#             history_text.insert(tk.END, "점수  |  소요 시간  |  날짜\n")
-#             history_text.insert(tk.END, "-" * 60 + "\n")
-#
-#             for row in rows:
-#                 history_text.insert(tk.END, f"{row[0]}  |  {row[1]:.2f}초  |  {row[2]}\n")
-#
-#             close_button = tk.Button(history_window, text="닫기", command=history_window.quit, font=("Arial", 12))
-#             close_button.pack(pady=20)
-#
-#             history_window.mainloop()
-#         else:
-#             messagebox.showinfo("기록 없음", "현재 퀴즈 기록이 없습니다.")
-#     except mysql.connector.Error as err:
-#         messagebox.showerror("Database Error", f"Error: {err}")
-#     finally:
-#         if 'connection' in locals():
-#             connection.close()
-
-# 퀴즈 게임 실행 함수 (카테고리 선택)
 
 def quiz_game(category=None):
     print("데이터는 가져옴")
@@ -262,6 +182,7 @@ def quiz_game(category=None):
             else:
                 messagebox.showinfo("퀴즈 종료", f"퀴즈가 끝났습니다.\n"
                                                f"최종 점수: {score}/{len(questions)}")
+
             window.destroy()
 
     def check_answer(selected_option):
@@ -340,7 +261,7 @@ def login_screen():
 def create_game_or_add_question_screen():
     window = tk.Tk()
     window.title("게임 또는 문제 추가")
-    window.geometry("400x200")  # 창 크기 설정
+    window.geometry("500x400")  # 창 크기 설정
     window.resizable(False, False)  # 창 크기 조정 비활성화
 
     tk.Label(window, text="원하는 작업을 선택하세요", font=("Arial", 14)).pack(pady=20)
@@ -348,6 +269,8 @@ def create_game_or_add_question_screen():
     tk.Button(window, text="게임 시작", command=lambda: select_category_for_game(window),
               font=("Arial", 12), width=20).pack(pady=10)
     tk.Button(window, text="문제 추가", command=create_question_interface,
+              font=("Arial", 12), width=20).pack(pady=10)
+    tk.Button(window, text="기록 보기", command=create_question_interface,
               font=("Arial", 12), width=20).pack(pady=10)
 
     window.mainloop()
