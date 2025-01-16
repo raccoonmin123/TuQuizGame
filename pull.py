@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
 import random
-# Ensure the package is installed using pip: pip install mysql-connector-python
 import mysql.connector
 from hashlib import sha256
 import time
@@ -15,14 +14,14 @@ import time
 #     "port": 3306,
 #     "user": "root",
 #     "password": "sk0716kyh!",
-#     "database": "quiz_game_db",
+#     "database": "tuQuizGame",
 # }
 
 DB_CONFIG = {
     "host": "127.0.0.1",
     "port": 3306,
     "user": "root",
-    "password": "root",
+    "password": "sk0716kyh!",
     "database": "tuQuizGame",
 }
 
@@ -120,23 +119,35 @@ def get_questions_from_db(category=None):
             connection.close()
 
 
-# 문제를 데이터베이스에 추가하는 함수
-def add_question_to_db(question, option_a, option_b, option_c, option_d, correct_option, category):
+# MySQL 데이터베이스 연결 및 문제 추가 함수
+def add_question_to_db(question, answer_a, answer_b, answer_c, answer_d, correct, name, user_id):
     try:
-        connection = mysql.connector.connect(**DB_CONFIG)
-        cursor = connection.cursor()
-        query = """
-        INSERT INTO questions (question, answer_a, answer_b, answer_c, answer_d, Correct, name) 
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(query, (question, option_a, option_b, option_c, option_d, correct_option, category))
-        connection.commit()
-        messagebox.showinfo("Success", "문제가 성공적으로 추가되었습니다!")
+        # MySQL 데이터베이스 연결
+        conn = mysql.connector.connect(
+            host="127.0.0.1",  # 데이터베이스 호스트
+            user="root",       # 사용자명
+            password="sk0716kyh!",  # 비밀번호
+            database="tuQuizGame"    # 데이터베이스 이름
+        )
+        cursor = conn.cursor()
+
+        # 데이터베이스에 문제 추가
+        query = '''
+            INSERT INTO questions (question, answer_a, answer_b, answer_c, answer_d, correct, name, user_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        '''
+        data = (question, answer_a, answer_b, answer_c, answer_d, correct, name, user_id)
+        cursor.execute(query, data)
+
+        conn.commit()  # 변경사항 저장
+        conn.close()   # 연결 종료
+
+        # 문제 추가가 완료되었을 때 GUI에 표시할 메시지
+        messagebox.showinfo("문제 추가 완료", f"문제가 성공적으로 추가되었습니다!\n\n질문: {question}\n옵션 A: {answer_a}\n옵션 B: {answer_b}\n옵션 C: {answer_c}\n옵션 D: {answer_d}\n정답: {correct}\n카테고리: {name}")
+
     except mysql.connector.Error as err:
-        messagebox.showerror("Database Error", f"Error: {err}")
-    finally:
-        if 'connection' in locals():
-            connection.close()
+        messagebox.showerror("Database Error", f"에러가 발생했습니다: {err}")
+        print(f"Database Error: {err}")
 
 
 # def save_quiz_result_to_db(username, score, total_time):
@@ -287,66 +298,6 @@ def quiz_game(category=None):
     window.mainloop()
 
 
-# 문제 추가 인터페이스 함수 (카테고리 선택 추가)
-def create_question_interface():
-    def submit_question():
-        question = question_entry.get()
-        option_a = option_a_entry.get()
-        option_b = option_b_entry.get()
-        option_c = option_c_entry.get()
-        option_d = option_d_entry.get()
-        correct_option = correct_option_entry.get().upper()
-        category = category_var.get()
-
-        if not (question and option_a and option_b and option_c and option_d and correct_option and category):
-            messagebox.showerror("Error", "모든 필드를 입력해야 합니다.")
-            return
-
-        if correct_option not in ["A", "B", "C", "D"]:
-            messagebox.showerror("Error", "정답은 A, B, C, D 중 하나여야 합니다.")
-            return
-
-        add_question_to_db(question, option_a, option_b, option_c, option_d, correct_option, category)
-
-    window = tk.Tk()
-    window.title("퀴즈 추가")
-
-    tk.Label(window, text="문제:").grid(row=0, column=0, pady=5)
-    question_entry = tk.Entry(window, width=50)
-    question_entry.grid(row=0, column=1, pady=5)
-
-    tk.Label(window, text="옵션 A:").grid(row=1, column=0, pady=5)
-    option_a_entry = tk.Entry(window, width=50)
-    option_a_entry.grid(row=1, column=1, pady=5)
-
-    tk.Label(window, text="옵션 B:").grid(row=2, column=0, pady=5)
-    option_b_entry = tk.Entry(window, width=50)
-    option_b_entry.grid(row=2, column=1, pady=5)
-
-    tk.Label(window, text="옵션 C:").grid(row=3, column=0, pady=5)
-    option_c_entry = tk.Entry(window, width=50)
-    option_c_entry.grid(row=3, column=1, pady=5)
-
-    tk.Label(window, text="옵션 D:").grid(row=4, column=0, pady=5)
-    option_d_entry = tk.Entry(window, width=50)
-    option_d_entry.grid(row=4, column=1, pady=5)
-
-    tk.Label(window, text="정답 (A/B/C/D):").grid(row=5, column=0, pady=5)
-    correct_option_entry = tk.Entry(window, width=10)
-    correct_option_entry.grid(row=5, column=1, pady=5)
-
-    tk.Label(window, text="카테고리:").grid(row=6, column=0, pady=5)
-    category_var = tk.StringVar(window)
-    category_var.set("상식 문제")  # 기본값 설정
-    category_menu = tk.OptionMenu(window, category_var, "상식 문제", "역사 문제", "과학 문제")
-    category_menu.grid(row=6, column=1, pady=5)
-
-    submit_button = tk.Button(window, text="문제 추가", command=submit_question)
-    submit_button.grid(row=7, column=0, columnspan=2, pady=10)
-
-    window.mainloop()
-
-
 # 로그인 화면
 def login_screen():
     def login_action():
@@ -401,6 +352,73 @@ def create_game_or_add_question_screen():
 
     window.mainloop()
 
+# 문제 추가 인터페이스 함수 (카테고리 선택 추가)
+def create_question_interface():
+    def submit_question():
+        question = question_entry.get()
+        answer_a = answer_a_entry.get()
+        answer_b = answer_b_entry.get()
+        answer_c = answer_c_entry.get()
+        answer_d = answer_d_entry.get()
+        correct = correct_entry.get().upper()
+        name = category_var.get()
+        user_id = user_id_entry.get()
+
+        if not (question and answer_a and answer_b and answer_c and answer_d and correct and name and user_id):
+            messagebox.showerror("Error", "모든 필드를 입력해야 합니다.")
+            return
+
+        if correct not in ["A", "B", "C", "D"]:
+            messagebox.showerror("Error", "정답은 A, B, C, D 중 하나여야 합니다.")
+            return
+
+        # 문제 추가
+        add_question_to_db(question, answer_a, answer_b, answer_c, answer_d, correct, name, user_id)
+
+    window = tk.Tk()
+    window.title("퀴즈 추가")
+
+    # 문제 항목 입력 UI
+    tk.Label(window, text="문제:").grid(row=0, column=0, pady=5)
+    question_entry = tk.Entry(window, width=50)
+    question_entry.grid(row=0, column=1, pady=5)
+
+    tk.Label(window, text="옵션 A:").grid(row=1, column=0, pady=5)
+    answer_a_entry = tk.Entry(window, width=50)
+    answer_a_entry.grid(row=1, column=1, pady=5)
+
+    tk.Label(window, text="옵션 B:").grid(row=2, column=0, pady=5)
+    answer_b_entry = tk.Entry(window, width=50)
+    answer_b_entry.grid(row=2, column=1, pady=5)
+
+    tk.Label(window, text="옵션 C:").grid(row=3, column=0, pady=5)
+    answer_c_entry = tk.Entry(window, width=50)
+    answer_c_entry.grid(row=3, column=1, pady=5)
+
+    tk.Label(window, text="옵션 D:").grid(row=4, column=0, pady=5)
+    answer_d_entry = tk.Entry(window, width=50)
+    answer_d_entry.grid(row=4, column=1, pady=5)
+
+    tk.Label(window, text="정답 (A/B/C/D):").grid(row=5, column=0, pady=5)
+    correct_entry = tk.Entry(window, width=10)
+    correct_entry.grid(row=5, column=1, pady=5)
+
+    tk.Label(window, text="카테고리:").grid(row=6, column=0, pady=5)
+    category_var = tk.StringVar(window)
+    category_var.set("상식")  # 기본값 설정
+    category_menu = tk.OptionMenu(window, category_var, "상식", "역사", "과학")
+    category_menu.grid(row=6, column=1, pady=5)
+
+    tk.Label(window, text="사용자 ID:").grid(row=7, column=0, pady=5)
+    user_id_entry = tk.Entry(window, width=10)
+    user_id_entry.grid(row=7, column=1, pady=5)
+
+    submit_button = tk.Button(window, text="문제 추가", command=submit_question)
+    submit_button.grid(row=8, column=0, columnspan=2, pady=10)
+
+    window.mainloop()
+
+
 
 # 카테고리 선택 후 퀴즈 시작
 def select_category_for_game(prev_window=None):
@@ -419,7 +437,7 @@ def select_category_for_game(prev_window=None):
     tk.Label(window, text="카테고리 선택", font=("Arial", 14)).pack(pady=20)
 
     category_var = tk.StringVar(window)
-    category_var.set("상식 문제")  # 기본값 설정
+    category_var.set("상식")  # 기본값 설정
     category_menu = tk.OptionMenu(window, category_var, "상식", "역사", "과학")
     category_menu.pack(pady=10)
 
